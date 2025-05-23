@@ -1,0 +1,5 @@
+streamlit
+torch
+torchvision
+timm
+Pillow # PIL is handled by Pillow
