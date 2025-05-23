@@ -1,20 +1,97 @@
 import streamlit as st
 from PIL import Image
+import torch
+import timm
+import torch.nn as nn
+import torchvision.transforms as transforms
 
-# Title of the app
-st.title("Image Detection App")
+# --- Configuration ---
+# Define the path to your locally saved model
+model_path = 'd:/Model DL/mobilenetv4_plant_disease_model.pth'
+
+# Define the class names in the exact order as your training dataset
+class_names = [
+    'Pepper__bell___Bacterial_spot',
+    'Pepper__bell___healthy',
+    'Potato___Early_blight',
+    'Potato___Late_blight',
+    'Potato___healthy',
+    'Tomato_Bacterial_spot',
+    'Tomato_Early_blight',
+    'Tomato_Late_blight',
+    'Tomato_Leaf_Mold',
+    'Tomato_Septoria_leaf_spot',
+    'Tomato_Spider_mites_Two_spotted_spider_mite',
+    'Tomato__Target_Spot',
+    'Tomato__Tomato_YellowLeaf__Curl_Virus',
+    'Tomato__Tomato_mosaic_virus',
+    'Tomato_healthy'
+]
+num_classes = len(class_names)
+image_size = 224 # Make sure this matches your training image size
+
+# Define the same validation transform used during training
+# This is crucial for consistent preprocessing
+val_transform = transforms.Compose([
+    transforms.Resize((image_size, image_size)),
+    transforms.ToTensor(),
+    transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+])
+
+# --- Model Loading ---
+@st.cache_resource # Cache the model to avoid reloading it every time the app reruns
+def load_model(path, num_classes):
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    model = timm.create_model('mobilenetv4_conv_small.e2400_r224_in1k', pretrained=False, num_classes=num_classes)
+    model.load_state_dict(torch.load(path, map_location=device))
+    model.eval() # Set model to evaluation mode
+    return model.to(device)
+
+# Load your model
+model = load_model(model_path, num_classes)
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
+# --- Prediction Function ---
+def predict_image(image, model, transform, class_names, device):
+    # Apply transformations
+    input_tensor = transform(image)
+    # Add batch dimension
+    input_batch = input_tensor.unsqueeze(0)
+    # Move to the correct device
+    input_batch = input_batch.to(device)
+
+    with torch.no_grad(): # Disable gradient calculation for inference
+        output = model(input_batch)
+        probabilities = torch.nn.functional.softmax(output, dim=1)
+        # Get the predicted class index
+        predicted_idx = torch.argmax(probabilities, dim=1).item()
+        # Get the probability of the predicted class
+        confidence = probabilities[0, predicted_idx].item()
+
+    predicted_class = class_names[predicted_idx]
+    return predicted_class, confidence
+
+
+# --- Streamlit App Layout ---
+st.title("Plant Disease Detection App")
+
+st.write("Upload an image of a plant leaf to detect potential diseases.")
 
 # File uploader for image input
-uploaded_file = st.file_uploader("Upload an image", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
 
-# Display the uploaded image
+# Display the uploaded image and prediction
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded Image", use_column_width=True)
 
-    # Detection button
-    if st.button("Detect"):
-        # Placeholder for detection logic
-        st.write("Detection in progress...")
-        # Example output
-        st.success("Detection complete! No objects detected.")
+    if st.button("Detect Disease"):
+        with st.spinner('Detecting...'):
+            predicted_class, confidence = predict_image(image, model, val_transform, class_names, device)
+            st.success("Detection Complete!")
+            st.write(f"**Predicted Disease:** {predicted_class}")
+            st.write(f"**Confidence:** {confidence:.2%}") # Format as percentage
+
+else:
+    st.info("Please upload an image to get started.")
