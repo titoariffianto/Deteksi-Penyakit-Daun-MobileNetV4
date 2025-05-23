@@ -5,9 +5,8 @@ import timm
 import torch.nn as nn
 import torchvision.transforms as transforms
 
-# --- Configuration ---
-# Define the path to your locally saved model
-model_path = 'd:/Model DL/mobilenetv4_plant_disease_model.pth'
+
+model_path = 'mobilenetv4_plant_disease_model.pth'
 
 # Define the class names in the exact order as your training dataset
 class_names = [
