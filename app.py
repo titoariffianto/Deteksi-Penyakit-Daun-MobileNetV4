@@ -26,7 +26,7 @@ class_names = [
     'Tomato_healthy'
 ]
 num_classes = len(class_names)
-image_size = 224
+image_size = 224 
 
 val_transform = transforms.Compose([
     transforms.Resize((image_size, image_size)),
@@ -60,23 +60,23 @@ def predict_image(image, model, transform, class_names, device):
     predicted_class = class_names[predicted_idx]
     return predicted_class, confidence
 
+st.title("Aplikasi Deteksi Penyakit Tanaman")
 
-st.title("Plant Disease Detection App")
+st.write("Unggah gambar daun tanaman untuk mendeteksi potensi penyakit.")
 
-st.write("Upload an image of a plant leaf to detect potential diseases.")
-
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Pilih sebuah gambar...", type=["jpg", "jpeg", "png"])
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded Image", use_container_width=True)
 
-    if st.button("Detect Disease"):
-        with st.spinner('Detecting...'):
+    st.image(image, caption="Gambar yang Diunggah", use_container_width=True)
+
+    if st.button("Deteksi Penyakit"):
+        with st.spinner('Mendeteksi...'):
             predicted_class, confidence = predict_image(image, model, val_transform, class_names, device)
-            st.success("Detection Complete!")
-            st.write(f"**Predicted Disease:** {predicted_class}")
-            st.write(f"**Confidence:** {confidence:.2%}")
+            st.success("Deteksi Selesai!")
+            st.write(f"**Penyakit yang Diprediksi:** {predicted_class}")
+            st.write(f"**Tingkat Kepercayaan:** {confidence:.2%}") 
 
 else:
-    st.info("Please upload an image to get started.")
+    st.info("Silakan unggah gambar untuk memulai.")
