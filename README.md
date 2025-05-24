@@ -44,3 +44,5 @@ streamlit run app.py
 ### 📈 Confusion Matrix
 
 ![Confusion Matrix](images/confusion_matrix.png)
+
+link google colab : https://colab.research.google.com/drive/1eoU9mVBYMYSl0Y91Un-OnxAAIXDfJmxP?usp=chrome_ntp#scrollTo=tXrcK4h5EbNL
