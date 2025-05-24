@@ -26,7 +26,7 @@ class_names = [
     'Tomato_healthy'
 ]
 num_classes = len(class_names)
-image_size = 224 
+image_size = 224
 
 val_transform = transforms.Compose([
     transforms.Resize((image_size, image_size)),
@@ -60,6 +60,7 @@ def predict_image(image, model, transform, class_names, device):
     predicted_class = class_names[predicted_idx]
     return predicted_class, confidence
 
+
 st.title("Aplikasi Deteksi Penyakit Tanaman")
 
 st.write("Unggah gambar daun tanaman untuk mendeteksi potensi penyakit.")
@@ -68,7 +69,9 @@ uploaded_file = st.file_uploader("Pilih sebuah gambar...", type=["jpg", "jpeg", 
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-
+    if image.mode != 'RGB':
+        image = image.convert('RGB')
+        
     st.image(image, caption="Gambar yang Diunggah", use_container_width=True)
 
     if st.button("Deteksi Penyakit"):
@@ -76,7 +79,7 @@ if uploaded_file is not None:
             predicted_class, confidence = predict_image(image, model, val_transform, class_names, device)
             st.success("Deteksi Selesai!")
             st.write(f"**Penyakit yang Diprediksi:** {predicted_class}")
-            st.write(f"**Tingkat Kepercayaan:** {confidence:.2%}") 
+            st.write(f"**Tingkat Kepercayaan:** {confidence:.2%}")
 
 else:
     st.info("Silakan unggah gambar untuk memulai.")
